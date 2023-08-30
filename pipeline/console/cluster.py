@@ -99,7 +99,7 @@ def _login(namespace: Namespace) -> None:
 def _use(namespace: Namespace) -> None:
     alias = getattr(namespace, "alias")
     if current_configuration.remotes is None:
-        _print("No remote configurations. Login first.", level="ERROR")
+        _print("No remote configurations found. Login first.", level="ERROR")
         return
 
     if not any([remote.alias == alias for remote in current_configuration.remotes]):
@@ -111,6 +111,9 @@ def _use(namespace: Namespace) -> None:
 
 
 def _get(namespace: Namespace) -> None:
+    if current_configuration.remotes is None:
+        _print("No remote configurations found. Login first.", level="ERROR")
+        return
     remotes = [
         f"{_remote} (active)" if _remote.active else f"{_remote}"
         for _remote in current_configuration.remotes
