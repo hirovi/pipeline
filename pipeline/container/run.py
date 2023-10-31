@@ -38,8 +38,9 @@ async def execution_handler(execution_queue: asyncio.Queue, manager: Manager) ->
 async def get_pipeline_form():
     import os
 
-    with open(os.path.join("/app/pipeline/container", "app.tsx"), "r") as file:
+    with open(os.path.join("/app/pipeline/container/frontend", "app.tsx"), "r") as file:
         ts_code = file.read()
+
     return f"""
     <!-- Your code that needs compiling goes in a type="text/babel" `script` tag -->
     <script type="text/babel" data-presets="react,stage-3">
