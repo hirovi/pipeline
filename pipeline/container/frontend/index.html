@@ -689,20 +689,26 @@
       }
 
       function App() {
-        const dynamicFields =
-          generateDynamicFieldsFromIOVariables(mockIOVariables);
-
-        const [inputData, setInputData] = React.useState(
-          generateInputDataArrayFromDynamicFields(dynamicFields)
-        );
+        const [dynamicFields, setDynamicFields] = React.useState(null);
+        const [inputData, setInputData] = React.useState(null);
         const [pipeline, setPipeline] = React.useState(null);
 
         React.useEffect(() => {
           fetch(`${host}/v4/container/pipeline`)
             .then((res) => res.json())
-            .then((data) => setPipeline(data))
+            .then((data) => {
+              setPipeline(data);
+              setDynamicFields(
+                generateDynamicFieldsFromIOVariables(data.input_variables)
+              );
+            })
             .catch((err) => console.log(err));
         }, []);
+        React.useEffect(() => {
+          if (!dynamicFields) return;
+          setInputData(generateInputDataArrayFromDynamicFields(dynamicFields));
+        }, [dynamicFields]);
+
         console.log(pipeline);
         function handleNonParentedField(fieldId, newValue) {
           const field = dynamicFields.find(
@@ -788,6 +794,7 @@
         React.useEffect(() => {
           console.log("updated inputData :>> ", inputData);
         }, [inputData]);
+        if (!dynamicFields) return <></>;
 
         return (
           <div className="flex flex-col gap-8">

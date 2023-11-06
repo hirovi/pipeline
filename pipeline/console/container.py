@@ -174,7 +174,7 @@ def _build_container(namespace: Namespace):
 
     pipeline_config = PipelineConfig.parse_obj(pipeline_config_yaml)
 
-    extra_paths = "COPY ./examples/docker/ ./\n"
+    extra_paths = "COPY ./examples/docker/multi_inputs/ ./\n"
 
     if not pipeline_config.runtime:
         raise ValueError("No runtime config found")
@@ -205,10 +205,10 @@ def _build_container(namespace: Namespace):
     try:
         new_container, build_logs = docker_client.images.build(
             # fileobj=dockerfile_path.open("rb"),
-            path="../../",
+            path="../../../",
             quiet=True,
             # custom_context=True,
-            dockerfile="./examples/docker/pipeline.dockerfile",
+            dockerfile=dockerfile_path.absolute(),
             # tag="test",
             rm=True,
         )

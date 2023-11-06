@@ -1,0 +1,18 @@
+runtime:
+  container_commands:
+    - "apt update -y"
+    - "apt install -y git"
+    # - "apt-get update && \
+    #   apt-get -y install gcc mono-mcs && \
+    #   rm -rf /var/lib/apt/lists/*"
+  python:
+    python_version: "3.10"
+    python_requirements:
+      - "torch==2.0.1"
+      # - "accelerate==0.21.0"
+      # - "vllm==0.2.0"
+      # - "pandas"
+accelerators:
+  - cpu
+pipeline_graph: "my_pipeline:pipeline_graph"
+pipeline_name: plutopulp/multi-inputs
