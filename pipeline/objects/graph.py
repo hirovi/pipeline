@@ -1,20 +1,22 @@
 import inspect
-import tempfile
 from pathlib import Path
 from types import NoneType, UnionType
-from typing import Any, Iterable, List, Optional, get_args
+from typing import Any, Iterable, List, get_args
 from urllib.parse import ParseResult, urlparse
 
 import httpx
-from cloudpickle import dumps
-from dill import loads
+
+# Have tmp added this because loads/dumps import
+# did not exist
+from cloudpickle import dumps, loads
 from tqdm import tqdm
 
 from pipeline.cloud.schemas.pipelines import IOVariable
 from pipeline.cloud.schemas.runs import RunIOType
+from pipeline.exceptions import RunInputException
 from pipeline.objects.function import Function
 from pipeline.objects.model import Model
-from pipeline.util import dump_object, generate_id
+from pipeline.util import generate_id
 
 
 class InputSchema:
@@ -438,24 +440,24 @@ class File(Variable):
         self.remote_id: str | None = remote_id
         self.url = urlparse(url) if url is not None else None
 
-    @classmethod
-    def from_object(
-        cls,
-        obj: Any,
-        modules: Optional[List[str]] = None,
-        allow_out_of_context_creation: bool = True,
-    ):
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
+    # @classmethod
+    # def from_object(
+    #     cls,
+    #     obj: Any,
+    #     modules: Optional[List[str]] = None,
+    #     allow_out_of_context_creation: bool = True,
+    # ):
+    #     temp_file = tempfile.NamedTemporaryFile(delete=False)
 
-        bytes = dump_object(obj, modules=modules)
-        temp_file.write(bytes)
-        temp_file.seek(0)
+    #     bytes = dump_object(obj, modules=modules)
+    #     temp_file.write(bytes)
+    #     temp_file.seek(0)
 
-        return cls(
-            path=temp_file.name,
-            title=temp_file.name,
-            allow_out_of_context_creation=allow_out_of_context_creation,
-        )
+    #     return cls(
+    #         path=temp_file.name,
+    #         title=temp_file.name,
+    #         allow_out_of_context_creation=allow_out_of_context_creation,
+    #     )
 
     def save(self, path: str | Path) -> None:
         if self.path is None and self.url is None:
@@ -626,7 +628,7 @@ class Graph:
         ]
 
         if len(inputs) != len(input_variables):
-            raise Exception(
+            raise RunInputException(
                 "Mismatch of number of inputs, expecting %u got %s"
                 % (len(input_variables), len(inputs))
             )
@@ -639,7 +641,7 @@ class Graph:
         for var in self.variables:
             if isinstance(var, File):
                 if not var.path:
-                    raise Exception("Must define a path for a File")
+                    raise RunInputException("Must define a path for a File")
 
                 running_variables[var.local_id] = var
 
@@ -652,7 +654,7 @@ class Graph:
                 if isinstance(input, int) and input_variables[i].type_class == float:
                     input = float(input)
                 else:
-                    raise Exception(
+                    raise RunInputException(
                         "Input type mismatch, expceted %s got %s"
                         % (
                             input_variables[i].type_class,

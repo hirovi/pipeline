@@ -53,12 +53,12 @@ def get_parser(command_parser: "_SubParsersAction[ArgumentParser]") -> None:
     get_parser.set_defaults(func=_get_pipeline)
 
     # get by name
-    get_parser.add_argument(
-        "--name",
-        "-n",
-        help="Pipeline name.",
-        type=str,
-    )
+    # get_parser.add_argument(
+    #     "--name",
+    #     "-n",
+    #     help="Pipeline name.",
+    #     type=str,
+    # )
     get_parser.add_argument(
         "--skip",
         "-s",
@@ -95,16 +95,21 @@ def _get_pipeline(args: Namespace) -> None:
 
     params = dict()
     pagination = get_default_pagination()
-    if name := getattr(args, "name", None):
-        params["name"] = name
+    # if name := getattr(args, "name", None):
+    #     params["name"] = name
     if skip := getattr(args, "skip", None):
         pagination.skip = skip
     if limit := getattr(args, "limit", None):
         pagination.limit = limit
     paginated_raw_pipelines: Paginated[dict] = http.get(
-        "/v3/pipelines",
+        "/v4/pipelines",
         params=dict(**params, **pagination.dict()),
     ).json()
+
+    # pipelines_: Paginated[pipelines_schema.PipelineGet] = Paginated[
+    #     pipelines_schema.PipelineGet
+    # ].parse_obj(paginated_raw_pipelines)
+
     pipelines = [
         [
             pipeline_raw["id"],
@@ -130,16 +135,6 @@ def _get_pipeline(args: Namespace) -> None:
                         )
                     )
                 )
-            )
-            + (
-                " (" + str(val) + "MB VRAM)"
-                if (val := pipeline_raw.get("gpu_memory_min", "N/A"))
-                else (
-                    ""
-                    if (pl_accelerators := pipeline_raw.get("accelerators", [])) is None
-                    or Accelerator.cpu in pl_accelerators
-                    else "-"
-                )
             ),
         ]
         for pipeline_raw in paginated_raw_pipelines["data"]
@@ -157,7 +152,7 @@ def _get_pipeline(args: Namespace) -> None:
             "ID",
             "Name",
             "Created",
-            "Cache #",
+            "Cache # (min-max)",
             "Accelerators",
         ],
         tablefmt="psql",
@@ -192,7 +187,7 @@ def _delete_pipeline(args: Namespace) -> None:
     pipeline_id = getattr(args, "pipeline_id")
 
     http.delete(
-        f"/v3/pipelines/{pipeline_id}",
+        f"/v4/pipelines/{pipeline_id}",
     )
 
     _print("Pipeline deleted!")

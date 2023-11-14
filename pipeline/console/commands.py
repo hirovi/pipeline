@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, _SubParsersAction
 
-from pipeline.console import cluster, logs
+from pipeline.console import cluster, container, logs
 from pipeline.console.targets import environments, files, pipelines, pointers, resources
 
 
@@ -109,3 +109,65 @@ def logs_parser(command_parser: "_SubParsersAction[ArgumentParser]") -> None:
         dest="target",
     )
     logs.run_logs_parser(logs_sub_parser)
+
+
+def container_parser(command_parser: "_SubParsersAction[ArgumentParser]") -> None:
+    container_parser = command_parser.add_parser(
+        "container",
+        description="Manage pipeline containers.",
+        help="Manage pipeline containers.",
+    )
+    container_parser.set_defaults(func=lambda _: container_parser.print_help())
+    container_sub_parser = container_parser.add_subparsers(
+        dest="target",
+    )
+
+    build_parser = container_sub_parser.add_parser(
+        "build",
+        description="Build a pipeline container.",
+        help="Build a pipeline container.",
+    )
+    build_parser.set_defaults(func=container._build_container)
+
+    push_parser = container_sub_parser.add_parser(
+        "push",
+        description="Push a pipeline container.",
+        help="Push a pipeline container.",
+    )
+    push_parser.set_defaults(func=container._push_container)
+
+    up_parser = container_sub_parser.add_parser(
+        "up",
+        description="Start a pipeline container.",
+        help="Start a pipeline container.",
+    )
+    up_parser.set_defaults(func=container._up_container)
+    up_parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Start the container in debug mode.",
+    )
+    # Allow multiple volumes to be specified
+
+    up_parser.add_argument(
+        "--volume",
+        "-v",
+        action="append",
+        help="Mount a volume into the container.",
+    )
+
+    # Init
+    init_parser = container_sub_parser.add_parser(
+        "init",
+        description="Initialize a directory for a new pipeline.",
+        help="Initialize a directory for a new pipeline.",
+    )
+
+    init_parser.add_argument(
+        "--name",
+        "-n",
+        type=str,
+        help="Name of the pipeline.",
+    )
+    init_parser.set_defaults(func=container._init_dir)
