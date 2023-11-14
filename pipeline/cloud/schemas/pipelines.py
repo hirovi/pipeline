@@ -2,6 +2,8 @@ import typing as t
 from datetime import datetime
 from enum import Enum
 
+from pydantic import Field
+
 from pipeline.cloud.compute_requirements import Accelerator
 from pipeline.cloud.schemas import BaseModel, pagination
 from pipeline.cloud.schemas.runs import RunIOType
@@ -26,6 +28,7 @@ class IOVariable(BaseModel):
     choices: list[t.Any] | None
     dict_schema: t.List[dict] | None
     default: t.Any | None
+    optional: bool | None
 
 
 class PipelineStartUpload(BaseModel):
@@ -75,6 +78,10 @@ class PipelineGet(Pipeline):
     accelerators: t.Optional[t.List[Accelerator]]
 
     extras: t.Optional[dict]
+    metadata: t.Optional[dict] = Field(alias="_metadata")
+
+    class Config(BaseModel.Config):
+        allow_population_by_field_name = True
 
 
 class PipelinePatch(BaseModel):
